@@ -39,17 +39,17 @@ import org.codehaus.jackson.annotate.JsonValue;
 public enum BillingAccountState {
 
     @XmlEnumValue("Defined")
-    DEFINED("Defined"),
+    Defined("Defined"),
     @XmlEnumValue("Active")
-    ACTIVE("Active"),
+    Active("Active"),
     @XmlEnumValue("Pending_Update")
-    PENDING_UPDATE("Pending_Update"),
+    Pending_Update("Pending_Update"),
     @XmlEnumValue("Suspended")
-    SUSPENDED("Suspended"),
+    Suspended("Suspended"),
     @XmlEnumValue("Pending_Closed")
-    PENDING_CLOSED("Pending_Closed"),
+    Pending_Closed("Pending_Closed"),
     @XmlEnumValue("Closed")
-    CLOSED("Closed");
+    Closed("Closed");
     private final String value;
 
     BillingAccountState(String v) {
@@ -69,6 +69,11 @@ public enum BillingAccountState {
             }
         }
         throw new IllegalArgumentException(v);
+    }
+
+    @Override
+    public String toString() {
+        return value();
     }
 
 }

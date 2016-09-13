@@ -2,7 +2,6 @@ package org.tmf.dsmapi.billingAccount;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -11,7 +10,6 @@ import javax.ejb.Stateless;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -25,9 +23,7 @@ import org.tmf.dsmapi.commons.exceptions.UnknownResourceException;
 import org.tmf.dsmapi.commons.utils.Jackson;
 import org.tmf.dsmapi.commons.utils.URIParser;
 import org.tmf.dsmapi.billingAccount.model.BillingAccount;
-import org.tmf.dsmapi.billingAccount.BillingAccountFacade;
 import org.tmf.dsmapi.billingAccount.event.BillingAccountEventPublisherLocal;
-import org.tmf.dsmapi.billingAccount.model.BillingAccountState;
 import org.tmf.dsmapi.commons.jaxrs.PATCH;
 
 @Stateless
@@ -48,10 +44,11 @@ public class BillingAccountResource {
     @POST
     @Consumes({"application/json"})
     @Produces({"application/json"})
-    public Response create(BillingAccount entity) throws BadUsageException {
-        billingAccountFacade.verifyFirstStatus(entity.getState());
+    public Response create(BillingAccount entity, @Context UriInfo info) throws BadUsageException, UnknownResourceException {
+        billingAccountFacade.checkCreation(entity);
         billingAccountFacade.create(entity);
-        publisher.createNotification(entity, new Date());
+        entity.setHref(info.getAbsolutePath()+ "/" + Long.toString(entity.getId()));
+        billingAccountFacade.edit(entity);
         // 201
         Response response = Response.status(Response.Status.CREATED).entity(entity).build();
         return response;
@@ -119,7 +116,7 @@ public class BillingAccountResource {
 
         BillingAccount billingAccount = billingAccountFacade.find(id);
         Response response;
-       
+
         // If the result list (list of bills) is not empty, it conains only 1 unique bill
         if (billingAccount != null) {
             // 200
@@ -137,39 +134,16 @@ public class BillingAccountResource {
         return response;
     }
 
-    @PUT
-    @Path("{id}")
-    @Consumes({"application/json"})
-    @Produces({"application/json"})
-    public Response update(@PathParam("id") long id, BillingAccount entity) throws UnknownResourceException, BadUsageException {
-        Response response = null;
-        BillingAccount billingAccount = billingAccountFacade.find(id);
-        if (billingAccount != null) {
-            billingAccountFacade.verifyStatus(billingAccount, entity);
-            entity.setId(id);
-            billingAccountFacade.edit(entity);
-            publisher.valueChangedNotification(entity, new Date());
-            // 201 OK + location
-            response = Response.status(Response.Status.CREATED).entity(entity).build();
-
-        } else {
-            // 404 not found
-            response = Response.status(Response.Status.NOT_FOUND).build();
-        }
-        return response;
-    }
-
-
     @PATCH
     @Path("{id}")
     @Consumes({"application/json"})
     @Produces({"application/json"})
     public Response patch(@PathParam("id") long id, BillingAccount partialUsage) throws BadUsageException, UnknownResourceException {
         Response response = null;
-        BillingAccount currentProduct = billingAccountFacade.updateAttributs(id, partialUsage);
-        
-        // 201 OK + location
-        response = Response.status(Response.Status.CREATED).entity(currentProduct).build();
+        BillingAccount currentProduct = billingAccountFacade.patchAttributs(id, partialUsage);
+
+        // 200 OK + location
+        response = Response.status(Response.Status.OK).entity(currentProduct).build();
 
         return response;
     }
