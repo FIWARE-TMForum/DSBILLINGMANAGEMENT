@@ -6,7 +6,7 @@
 
     <groupId>com.orange.dsmapi</groupId>
     <artifactId>DSBillingManagement</artifactId>
-    <version>5.4.1</version>
+    <version>6.4.0</version>
     <packaging>war</packaging>
 
     <name>${project.artifactId}</name>
